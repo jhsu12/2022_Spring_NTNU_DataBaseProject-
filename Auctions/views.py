@@ -7,11 +7,11 @@ from . import models
 from datetime import datetime
 
 global categories
-categories = ('Antiques', 'Art', 'Books', 'CDs,DVDs,Games', 'Clothing', 'Collectibles', 'Computers',
-				'Dining', 'Electronics', 'Food&Gourmet Items', 'ForYourPet', 'Golf&Sports Gear',
-				'Handbags', 'Health&Fitness', 'Home', 'Jewelry', 'Lawn&Garden', 'Memorabilia', 'Other',
-				'Services', 'Spa&Beauty', 'Tickets-Entertainment', 'Tickets-Sports', 'Toys', 'Travel',
-				'UniqueExperiences', 'Wine')
+categories = ('Antiques', 'Art', 'Books', 'CDs, DVDs, Games', 'Clothing', 'Collectibles', 'Computers',
+				'Dining', 'Electronics', 'Food and Gourmet Items', 'For Your Pet', 'Golf and SportsGear',
+				'Handbags', 'Health and Fitness', 'Home', 'Jewelry', 'Lawn and Garden', 'Memorabilia', 'Other',
+				'Services', 'Spa and Beauty', 'Tickets-Entertainment', 'Tickets-Sports', 'Toys', 'Travel',
+				'Unique Experiences', 'Wine')
 
 global user_id
 user_id = 1
@@ -49,24 +49,76 @@ def index(request):
 
     if request.method == "GET":
         category = request.GET.get('category', None)
+        if category is not None:
+            category = category.replace('_', ' ').replace('and', '&');
         time = request.GET.get('time', 'Latest')
         products = get_products(user_id, category, time)
        
-        print(products)
+        #print(category)
+        #print(len(products))
         return render(request, 'HTML/index.html', {
                 "user_id": user_id,
                 "user_name": user_name,
                 "categories": categories,
                 "products": products,
+                "total_items": len(products),
                 
             })
-    #request.method == "POST" sort by time or category
+    
 
 
 def create(request):
-    if request.method == "POST":
-        pass
-    #else GET request
+    # Check whether user is login or not 
+    global user_id, categories
+    if user_id == -1:
+        return HttpResponseRedirect(reverse("auc:login"))
+    user_name = user_is_authenticated()
+
+    #title error & start_price error
+    title_e = False
+    start_price_e = False
+    if request.method == "GET":
+        return render(request, 'HTML/CreateListing.html', {
+                "user_id": user_id,
+                "user_name": user_name,
+                "categories": categories,
+                "title_e": title_e,
+                "start_price_e": start_price_e,
+            })
+    elif request.method == "POST":
+        #Get data and check
+        #if not valid show error message & auto-fill the form?
+        Title = request.POST["title"]
+        Start_Date = request.POST["start_date"]
+        End_Date = request.POST["end_date"]
+        Category = request.POST["category"].replace('and', '&');
+        Start_Price = request.POST["start_price"]
+        Image = request.POST["image"]
+        Description = request.POST["description"]
+
+        if(not(Title and Title.strip())):
+            title_e = True
+        if(int(Start_Price) < 0 ):
+            start_price_e = True
+        
+        if(title_e or start_price_e):
+            return render(request, 'HTML/CreateListing.html', {
+                "user_id": user_id,
+                "user_name": user_name,
+                "categories": categories,
+                "title_e": title_e,
+                "start_price_e": start_price_e,
+            })
+        sm, sd, sy = Start_Date.split('/')
+        em, ed, ey = End_Date.split('/')
+        Start_Date = f"{sy}-{sm}-{sd}"
+        End_Date = f"{ey}-{em}-{ed}"
+
+        # insert tuple to product
+        models.SQL(f"insert into product (user_id, name, description, category, image, start_time, end_time, start_price) values ('{user_id}', '{Title}', '{Description}', '{Category}', '{Image}', '{Start_Date}', '{End_Date}', {Start_Price});")
+        #print(Title, Start_Date, End_Date, Category, Start_Price, Image, Description)
+        return HttpResponseRedirect(reverse("auc:index"))
+        
 
 def watchlist(request):
     pass
