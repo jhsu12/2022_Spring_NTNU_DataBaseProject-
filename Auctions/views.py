@@ -14,7 +14,7 @@ categories = ('Antiques', 'Art', 'Books', 'CDs, DVDs, Games', 'Clothing', 'Colle
 				'Unique Experiences', 'Wine')
 
 global user_id
-user_id = 1
+user_id = 2
 def user_is_authenticated():
     global user_id
     user_name = None
@@ -24,22 +24,88 @@ def user_is_authenticated():
         user_name = user_data[0]["username"]
     return user_name
 
-def get_products(user_id, category, time):
+# For index page(HOME)
+def get_products(category, time):
     
-    #products = models.SQL(f"select * from product where user_id = {user_id} and curdate() between start_time and end_time;")
     if category is None: #list all products
         if time == 'Latest':
-            products = models.SQL(f"select * from product where user_id = {user_id} and curdate() between start_time and end_time order by start_time DESC;")
+            products = models.SQL(f"select * from product where curdate() between start_time and end_time order by start_time DESC;")
         else:
-            products = models.SQL(f"select * from product where user_id = {user_id} and curdate() between start_time and end_time order by start_time ASC;")
+            products = models.SQL(f"select * from product where curdate() between start_time and end_time order by start_time ASC;")
     else: #list specific category
         if time == 'Latest':
-            products = models.SQL(f"select * from product where user_id = {user_id} and category = '{category}' and curdate() between start_time and end_time order by start_time DESC;")
+            products = models.SQL(f"select * from product where category = '{category}' and curdate() between start_time and end_time order by start_time DESC;")
         else:
-            products = models.SQL(f"select * from product where user_id = {user_id} and category = '{category}' and curdate() between start_time and end_time order by start_time ASC;")
+            products = models.SQL(f"select * from product where category = '{category}' and curdate() between start_time and end_time order by start_time ASC;")
     
     return products
 
+# For Listing page(WATCHLIST)
+def get_listing_products(user_id, listing , state, category, time):
+
+    if listing == 'WatchList':
+        #natural join Product & Watchlist
+        if state == 'On-Going':
+            if category is None: #list all products
+                if time == 'Latest':
+                    products = models.SQL(f"select * from product inner join watchlist using(product_id) where watchlist.user_id = {user_id} and curdate() between start_time and end_time order by start_time DESC;")
+                    print("innn")
+                else:
+                    products = models.SQL(f"select * from product inner join watchlist using(product_id) where watchlist.user_id = {user_id} and curdate() between start_time and end_time order by start_time ASC;")
+            else: #list specific category
+                if time == 'Latest':
+                    products = models.SQL(f"select * from product inner join watchlist using(product_id) where watchlist.user_id = {user_id} and category = '{category}' and curdate() between start_time and end_time order by start_time DESC;")
+                else:
+                    products = models.SQL(f"select * from product inner join watchlist using(product_id) where watchlist.user_id = {user_id} and category = '{category}' and curdate() between start_time and end_time order by start_time ASC;")
+        else:#state = End
+            if category is None: #list all products
+                if time == 'Latest':
+                    products = models.SQL(f"select * from product inner join watchlist using(product_id) where watchlist.user_id = {user_id} and curdate() > end_time order by start_time DESC;")
+                else:
+                    products = models.SQL(f"select * from product inner join watchlist using(product_id) where watchlist.user_id = {user_id} and curdate() > end_time order by start_time ASC;")
+            else: #list specific category
+                if time == 'Latest':
+                    products = models.SQL(f"select * from product inner join watchlist using(product_id) where watchlist.user_id = {user_id} and category = '{category}' and curdate() > end_time order by start_time DESC;")
+                else:
+                    products = models.SQL(f"select * from product inner join watchlist using(product_id) where watchlist.user_id = {user_id} and category = '{category}' and curdate() > end_time order by start_time ASC;")
+        
+    elif listing == 'Winning':
+        #natural join Product & Winner
+        if category is None: #list all products
+            if time == 'Latest':
+                products = models.SQL(f"select * from product inner join winner using(product_id) where winner.user_id = {user_id} order by start_time DESC;")
+            else:
+                products = models.SQL(f"select * from product inner join winner using(product_id) where winner.user_id = {user_id} order by start_time ASC;")
+        else: #list specific category
+            if time == 'Latest':
+                products = models.SQL(f"select * from product inner join winner using(product_id) where winner.user_id = {user_id} and category = '{category}' order by start_time DESC;")
+            else:
+                products = models.SQL(f"select * from product inner join winner using(product_id) where winner.user_id = {user_id} and category = '{category}' order by start_time ASC;")
+    elif listing == 'Creation':
+        if state == 'On-Going':
+            if category is None: #list all products
+                if time == 'Latest':
+                    products = models.SQL(f"select * from product where user_id = {user_id} and curdate() between start_time and end_time order by start_time DESC;")
+                else:
+                    products = models.SQL(f"select * from product where user_id = {user_id} and curdate() between start_time and end_time order by start_time ASC;")
+            else: #list specific category
+                if time == 'Latest':
+                    products = models.SQL(f"select * from product where user_id = {user_id} and category = '{category}' and curdate() between start_time and end_time order by start_time DESC;")
+                else:
+                    products = models.SQL(f"select * from product where user_id = {user_id} and category = '{category}' and curdate() between start_time and end_time order by start_time ASC;")
+        else:#state = End
+            if category is None: #list all products
+                if time == 'Latest':
+                    products = models.SQL(f"select * from product where user_id = {user_id} and curdate() > end_time order by start_time DESC;")
+                else:
+                    products = models.SQL(f"select * from product where user_id = {user_id} and curdate() > end_time order by start_time ASC;")
+            else: #list specific category
+                if time == 'Latest':
+                    products = models.SQL(f"select * from product where user_id = {user_id} and category = '{category}' and curdate() > end_time order by start_time DESC;")
+                else:
+                    products = models.SQL(f"select * from product where user_id = {user_id} and category = '{category}' and curdate() > end_time order by start_time ASC;")
+    
+    return products
 def index(request):
     # Check whether user is login or not 
     global user_id, categories
@@ -52,7 +118,7 @@ def index(request):
         if category is not None:
             category = category.replace('_', ' ').replace('and', '&');
         time = request.GET.get('time', 'Latest')
-        products = get_products(user_id, category, time)
+        products = get_products(category, time)
        
         #print(category)
         #print(len(products))
@@ -121,7 +187,39 @@ def create(request):
         
 
 def watchlist(request):
-    pass
+    # Check whether user is login or not 
+    global user_id, categories
+    if user_id == -1:
+        return HttpResponseRedirect(reverse("auc:login"))
+    user_name = user_is_authenticated()
+
+    if request.method == "GET":
+        winning = False
+
+        listing = request.GET.get('listing', 'WatchList')
+        state = request.GET.get('state', 'On-Going')
+        category = request.GET.get('category', None)
+        time = request.GET.get('time', 'Latest')
+
+        if category is not None:
+            category = category.replace('_', ' ').replace('and', '&')
+        if listing == 'Winning':
+            winning = True
+        #products = get_products(category, time)
+        #print(listing, state, category, time)
+        products = get_listing_products(user_id, listing, state, category, time)
+        #print(products)
+        #print(category)
+        #print(len(products))
+        return render(request, 'HTML/Listing.html', {
+                "user_id": user_id,
+                "user_name": user_name,
+                "categories": categories,
+                "winning": winning,
+                "products": products,
+                "total_items": len(products),
+                
+            })
 
 def login(request):
     pass
