@@ -1,10 +1,11 @@
-from datetime import datetime
+from datetime import *
 import Auctions
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from . import models
 from datetime import datetime
+from random import randrange
 
 global categories
 categories = ('Antiques', 'Art', 'Books', 'CDs, DVDs, Games', 'Clothing', 'Collectibles', 'Computers',
@@ -14,7 +15,7 @@ categories = ('Antiques', 'Art', 'Books', 'CDs, DVDs, Games', 'Clothing', 'Colle
 				'Unique Experiences', 'Wine')
 
 global user_id
-user_id = 2
+user_id = 1
 def user_is_authenticated():
     global user_id
     user_name = None
@@ -106,6 +107,27 @@ def get_listing_products(user_id, listing , state, category, time):
                     products = models.SQL(f"select * from product where user_id = {user_id} and category = '{category}' and curdate() > end_time order by start_time ASC;")
     
     return products
+
+# For checking winner
+def check_winner():
+    # query today > end time 's products
+    end_products = models.SQL('select * from product where curdate() > end_time;')
+    #print(end_products)
+    # if the product current price == -1 or is already in the winner list then delete from end_products
+    for p in end_products:
+        
+        winner = models.SQL(f'select * from winner where product_id = {p["product_id"]};')
+        #print(winner, len(winner))
+        if p["current_price"] == -1 or len(winner) != 0:
+            # remove p from end_products
+            end_products.remove(p)
+        else:
+            # get the winner's user_id
+            winner_id = models.SQL(f'select user_id from Bid_record where product_id = {p["product_id"]} order by date_time DESC;')[0]['user_id']
+            # insert new data to Winner table
+            models.SQL(f'insert into Winner values ({winner_id}, {p["product_id"]});')
+
+    
 def index(request):
     # Check whether user is login or not 
     global user_id, categories
@@ -113,13 +135,15 @@ def index(request):
         return HttpResponseRedirect(reverse("auc:login"))
     user_name = user_is_authenticated()
 
+    check_winner()
     if request.method == "GET":
         category = request.GET.get('category', None)
         if category is not None:
             category = category.replace('_', ' ').replace('and', '&');
         time = request.GET.get('time', 'Latest')
         products = get_products(category, time)
-       
+
+        #print(products)
         #print(category)
         #print(len(products))
         return render(request, 'HTML/index.html', {
@@ -231,4 +255,108 @@ def notification(request):
     pass
 
 def product(request, p_id):#p_id = product_id
-    pass
+    # Check whether user is login or not 
+    global user_id, categories
+    if user_id == -1:
+        return HttpResponseRedirect(reverse("auc:login"))
+    user_name = user_is_authenticated()
+
+    #Get product
+    product_info = models.SQL(f"select * from product where product_id = {p_id};")
+    product = product_info[0]
+    end_time = product["end_time"]
+
+    invalid_bid = False
+    in_watchlist = False
+
+    if request.method == "POST":
+        if request.POST['action'] == "Bid":
+            try:
+                new_bid = int(request.POST['value'])
+            except:
+                invalid_bid = True
+                
+            #Check whether value is valid
+            if(not invalid_bid and new_bid > product['current_price'] and new_bid > product['start_price'] ):
+                #new bid value
+                # update Product's current_price
+                models.SQL(f"update Product set current_price = {new_bid} where product_id = {p_id};")
+                # insert new record in Bid_record.
+                models.SQL(f"insert into Bid_Record (user_id, product_id, bid_price) values ({user_id}, {p_id}, {new_bid});")
+                # query product again for latest information
+                product = models.SQL(f"select * from product where product_id = {p_id};")[0]
+            else:
+                # invalid value, show error message
+                invalid_bid = True
+        elif request.POST['action'] == "Add":
+            #insert data to watchlist
+            models.SQL(f"insert into Watchlist (user_id, product_id) values ({user_id}, {p_id});")
+        elif request.POST['action'] == "Remove":
+            #delete data from watchlist
+            models.SQL(f"delete from Watchlist where user_id={user_id} and product_id={p_id};")
+        elif request.POST['action'] == "Comment":
+            #insert into comment
+            comment = request.POST['comment']
+            comment = comment.replace('"', '""')
+            comment = comment.replace("'", "''")
+            print(comment)
+            models.SQL(f"insert into Comments (user_id, product_id, comment) values ({user_id}, {p_id}, '{comment}')")
+            
+    #get comments
+    comments = models.SQL(f"select * from Comments inner join User on User.id = Comments.user_id where Comments.product_id = {p_id};")
+    #replace back in comments
+    for comment in comments:
+        comment['comment'] = comment['comment'].replace('""', '"')
+    
+    #print(date.today() > end_time)
+    current_buyer = "None"
+
+    #check current price
+    if product['current_price'] != -1:
+        current_buyer_id = models.SQL(f"select user_id from Bid_record where product_id = {p_id} order by date_time DESC;")[0]['user_id']
+        current_buyer = models.SQL(f"select username from User where id={current_buyer_id};")[0]['username']
+
+    #get created by's name
+    created_by_id = models.SQL(f"select user_id from product where product_id = {p_id};")[0]['user_id']
+    created_by = models.SQL(f"select username from User where id={created_by_id};")[0]['username']
+
+    #check watchlist button when current user isn't the creator of the product
+    if created_by_id != user_id:
+        info = models.SQL(f"select * from watchlist where user_id={user_id} and product_id={p_id};")
+        #print(info)
+        if len(info) != 0:
+            in_watchlist = True
+    # get more products
+    more_products = models.SQL(f'select * from product where product_id <> {p_id} and curdate() between start_time and end_time;')
+
+    if len(more_products) > 4:
+        get_f = []
+        l = len(more_products)
+        for i in range(4):
+            ind = randrange(0, l)
+            get_f.append(more_products[ind])
+            more_products.remove(more_products[ind])
+            l -= 1
+        more_products = get_f
+
+    return render(request, 'HTML/Product.html', {
+            "user_id": user_id,
+            "user_name": user_name,
+
+            "current_buyer": current_buyer,
+            "created_by": created_by,
+            "valid": (date.today() < end_time and created_by_id != user_id),
+            "invalid_bid": invalid_bid,
+            "in_watchlist": in_watchlist,
+            "created_by_current_user": (created_by_id == user_id),
+
+            "more_products": more_products,
+            "product": product,
+            "total_comments": len(comments),
+            "comments": comments,
+            
+            
+        })
+    
+
+
