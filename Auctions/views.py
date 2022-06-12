@@ -7,6 +7,7 @@ from . import models
 from datetime import datetime
 from random import randrange
 
+
 global categories
 categories = ('Antiques', 'Art', 'Books', 'CDs, DVDs, Games', 'Clothing', 'Collectibles', 'Computers',
 				'Dining', 'Electronics', 'Food and Gourmet Items', 'For Your Pet', 'Golf and SportsGear',
@@ -15,7 +16,7 @@ categories = ('Antiques', 'Art', 'Books', 'CDs, DVDs, Games', 'Clothing', 'Colle
 				'Unique Experiences', 'Wine')
 
 global user_id
-user_id = 1
+user_id = -1
 def user_is_authenticated():
     global user_id
     user_name = None
@@ -246,10 +247,71 @@ def watchlist(request):
             })
 
 def login(request):
-    pass
+    global user_id;
+    # check whether the user is login
+    if user_id != -1:
+        return HttpResponseRedirect(reverse("auc:index"))
 
+
+    error = False
+
+    if request.method == "POST":
+        # Get the username & password
+        username = request.POST["username"]
+        password = request.POST["password"]
+
+        # check username & password
+        info = models.SQL(f"select * from User where username='{username}' and password='{password}';")
+        if(len(info) == 0):
+            error = True
+            #print("user isn't exist!")
+        else:
+            #print("user exist!")
+            #User exist, set user_id to current user_id
+            user_id = info[0]['id']
+            return HttpResponseRedirect(reverse("auc:index"))
+
+            
+    
+
+    return render(request, 'HTML/Login.html', {
+        'error': error,
+    })
+
+def register(request):
+    global user_id;
+    # check whether the user is login
+    if user_id != -1:
+        return HttpResponseRedirect(reverse("auc:index"))
+    error = False
+    if request.method == "POST":
+        # Get the username & password
+        username = request.POST["username"]
+        password = request.POST["password"]
+
+        # check username & password
+        info = models.SQL(f"select * from User where username='{username}';")
+        # User already exist
+        if(len(info) != 0):
+            error = True
+            show_reg = True
+            
+        else:
+            #insert new user to User
+            models.SQL(f"insert into user (username, password) values ('{username}', '{password}');")
+            # Get info
+            info = models.SQL(f"select * from User where username='{username}';")
+            user_id = info[0]['id']
+            return HttpResponseRedirect(reverse("auc:index"))
+    return render(request, 'HTML/Register.html', {
+        'error': error,
+    })
 def logout(request):
-    pass
+    # set user_id to -1, then redirect
+    global user_id
+    user_id = -1
+    return HttpResponseRedirect(reverse("auc:login"))
+
 
 def notification(request):
     pass
