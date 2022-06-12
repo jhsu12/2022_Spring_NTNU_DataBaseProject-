@@ -1,0 +1,69 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>{% block title %}Auctions{% endblock %}</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+              theme: {
+                extend: {
+                  colors: {
+                    violet: '#a7a0be',
+                  }
+                }
+              }
+            }
+        </script>
+        {% block scripts %}
+        {% endblock %}
+    </head>
+    <body>
+        
+
+        <nav class="bg-violet border-gray-200 px-2 sm:px-4 py-2.5 rounded">
+            <div class="container flex flex-wrap justify-between mx-auto">
+                <div class="block py-2 pr-4 pl-3 text-3xl font-semibold  text-black">
+                    AUCTIONS
+                </div>
+                {% if user_id != -1 %}
+                <div class="w-auto">
+                    <ul class="flex flex-col mt-4 md:flex-row md:space-x-8 md:mt-0 md:text-sm md:font-medium">
+                        <li>
+                            <a href="{% url 'auc:index' %}" class="block py-2 pr-4 pl-3 text-black">HOME</a>
+                        </li>
+                        <li>
+                            <a href="{% url 'auc:create' %}" class="block py-2 pr-4 pl-3 text-black">CREATE</a>
+                        </li>
+                        <li>
+                            <a href="{% url 'auc:watchlist' %}" class="block py-2 pr-4 pl-3 text-black">WATCHLIST</a>
+                        </li>
+                        <li>
+                            <a href="{% url 'auc:logout' %}" class="block py-2 pr-4 pl-3 text-black">LOGOUT</a>
+                        </li>
+                        <li>
+                            <a href="{% url 'auc:notification' %}" class="block py-2 pr-4 pl-3 text-black">NOTIFY</a>
+                        </li>
+                        <li>
+                            <div class="block py-2 pr-4 pl-3 text-black">Signed in as <strong>{{ user_name }}</strong></div>
+                        </li>
+                    </ul>
+                </div>
+                {% endif %}
+
+                <div class="block py-2 pr-4 pl-3  text-black">
+                    {% if user_id == -1 %}
+                        Not signed in.
+                    {% endif %}
+                </div>
+            </div>
+            
+        </nav>
+        
+        
+        {% block body %}
+        {% endblock %}
+    </body>
+</html>
