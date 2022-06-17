@@ -126,7 +126,7 @@ def check_winner():
             # get the winner's user_id
             winner_id = models.SQL(f'select user_id from Bid_record where product_id = {p["product_id"]} order by date_time DESC;')[0]['user_id']
             # insert new data to Winner table
-            models.SQL(f'insert into Winner values ({winner_id}, {p["product_id"]});')
+            models.SQL(f'insert into winner values ({winner_id}, {p["product_id"]});')
 
     
 def index(request):
@@ -342,9 +342,9 @@ def product(request, p_id):#p_id = product_id
             if(not invalid_bid and new_bid > product['current_price'] and new_bid > product['start_price'] ):
                 #new bid value
                 # update Product's current_price
-                models.SQL(f"update Product set current_price = {new_bid} where product_id = {p_id};")
+                models.SQL(f"update product set current_price = {new_bid} where product_id = {p_id};")
                 # insert new record in Bid_record.
-                models.SQL(f"insert into Bid_Record (user_id, product_id, bid_price) values ({user_id}, {p_id}, {new_bid});")
+                models.SQL(f"insert into Bid_record (user_id, product_id, bid_price) values ({user_id}, {p_id}, {new_bid});")
                 # query product again for latest information
                 product = models.SQL(f"select * from product where product_id = {p_id};")[0]
             else:
@@ -352,20 +352,20 @@ def product(request, p_id):#p_id = product_id
                 invalid_bid = True
         elif request.POST['action'] == "Add":
             #insert data to watchlist
-            models.SQL(f"insert into Watchlist (user_id, product_id) values ({user_id}, {p_id});")
+            models.SQL(f"insert into watchlist (user_id, product_id) values ({user_id}, {p_id});")
         elif request.POST['action'] == "Remove":
             #delete data from watchlist
-            models.SQL(f"delete from Watchlist where user_id={user_id} and product_id={p_id};")
+            models.SQL(f"delete from watchlist where user_id={user_id} and product_id={p_id};")
         elif request.POST['action'] == "Comment":
             #insert into comment
             comment = request.POST['comment']
             comment = comment.replace('"', '""')
             comment = comment.replace("'", "''")
             print(comment)
-            models.SQL(f"insert into Comments (user_id, product_id, comment) values ({user_id}, {p_id}, '{comment}')")
+            models.SQL(f"insert into comments (user_id, product_id, comment) values ({user_id}, {p_id}, '{comment}')")
             
     #get comments
-    comments = models.SQL(f"select * from Comments inner join User on User.id = Comments.user_id where Comments.product_id = {p_id};")
+    comments = models.SQL(f"select * from comments inner join User on User.id = comments.user_id where comments.product_id = {p_id};")
     #replace back in comments
     for comment in comments:
         comment['comment'] = comment['comment'].replace('""', '"')
