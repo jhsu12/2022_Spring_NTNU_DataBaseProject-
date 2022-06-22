@@ -1,0 +1,89 @@
+
+{% load static %}
+
+{% block title %}
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                violet: '#a7a0be',
+              }
+            }
+          }
+        }
+    </script>
+
+</head>
+{% endblock %}
+
+
+{% block body %}
+    <header class = "bg-violet border-gray-200 flex justify-center item-center flex flex-wrap justify-center item-center" style = "height: 300px">
+            <div class="w-full sm:w-1/4 p-10 ">
+                <img src="{% static 'Auctions/hammer.png'%}" class="w-full">
+            </div>
+            <div class="w-full sm:w-1/6 "></div>
+            <div class="w-full sm:w-1/5 px-4 py-4" style="height:300px">
+                <div class="h-full bg-white border-2 border-black p-2"   >
+                    <form action="" method="POST" >
+                        {% csrf_token %}
+                        <!-- {{ form }} -->
+                        
+                        <br />
+
+                        <p class="line-height:2">USERNAME</p>
+                        <p class="line-height:2"><input class="bg-gray-300 w-full " name="username" style="height:30px" autofocus></p>
+                        <br>
+                        <p>PASSWORD</p>
+                        <p><input class="bg-gray-300 w-full " name="password" type="password" style="height:30px"></p>
+                        <br>
+                        <div class="grid place-items-end">
+                        <input class="btn btn-success" type="submit" value="LOGIN" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+    </header>
+
+
+
+
+    <section class="py-10">
+        <div class="container mx-auto max-w-6xl">
+            <div class="px-2" >
+                <div class="flex flex-wrap -mx-2 justify-center item-center">
+                    <div class="w-full sm:w-3/12 px-10 bg-gray-300 border-2 border-black rounded-2xl text-center">
+                        <div class="rounded" style="height:250px">
+                            <div class="text-3xl">About Us</div>
+                            About UsAbout UsAbout UsAbout UsAbout UsAbout UsAbout UsAbout UsAbout Us
+                        </div>
+                    </div>
+                    <div class="w-full sm:w-1/12"></div>
+                    <div class="w-full sm:w-3/12 px-10 bg-gray-300 border-2 border-black rounded-2xl text-center">
+                        <div class="rounded" style="height:250px">
+                            <div class="text-3xl">How It Works</div>
+                            How ir worksHow ir worksHow ir worksHow ir worksHow ir works
+                        </div>
+                    </div>
+                    <div class="w-full sm:w-1/12"></div>
+                    <div class="w-full sm:w-3/12 px-10 bg-gray-300 border-2 border-black rounded-2xl text-center">
+                        <div class="rounded" style="height:250px">
+                            <div class="text-3xl">FAQ</div>
+                            FAQFAQFAQFAQFAQFAQ
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+
+    </section>
+
+
+    {% endblock  %}
